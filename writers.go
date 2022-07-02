@@ -34,7 +34,7 @@ func NewFileRotateWriter(path string) (io.Writer, error) {
 	if !isDirWritable(dir) {
 		if err := os.MkdirAll(dir, 0744); err != nil {
 			err = fmt.Errorf("can't create log directory: %s -> %s", dir, err.Error())
-			defaultLogger.Error().Send(err.Error())
+			rootLogger.Error(err.Error())
 			return nil, err
 		}
 	}

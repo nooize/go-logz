@@ -21,8 +21,6 @@ func (l Level) String() string {
 		return LevelError
 	case Fatal:
 		return LevelFatal
-	case Panic:
-		return LevelPanic
 	case Disabled:
 		return "disabled"
 	case Nop:

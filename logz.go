@@ -1,15 +1,14 @@
 package logz
 
 import (
-	"github.com/nooize/go-logz/delivery/sys"
 	"os"
 	"sync"
 )
 
 var (
-	defaultLogger Logger
-	loggerPool    = make(map[string]Logger)
-	loggersMu     sync.RWMutex
+	rootLogger Logger
+	loggerPool = make(map[string]Logger)
+	loggersMu  sync.RWMutex
 )
 
 func Append(key string, log Logger) {
@@ -21,20 +20,18 @@ func Append(key string, log Logger) {
 	loggersMu.Unlock()
 }
 
-func Log(keys ...string) (res Logger) {
-	res = defaultLogger
-	if len(keys) == 0 {
-		return
+func Get(keys ...string) Logger {
+	if len(keys) > 0 {
+		for _, key := range keys {
+			loggersMu.RLock()
+			l, ok := loggerPool[key]
+			loggersMu.RUnlock()
+			if ok && l != nil {
+				return l
+			}
+		}
 	}
-	loggersMu.RLock()
-	if lc, ok := loggerPool[keys[0]]; ok && lc != nil {
-		res = lc
-	} else {
-		//nl := res.Str("service", keys[0]).Logger()
-		//res = &nl
-	}
-	loggersMu.RUnlock()
-	return
+	return rootLogger
 }
 
 func init() {
@@ -42,5 +39,7 @@ func init() {
 	if os.Getenv("DEBUG_MODE") == "true" {
 		logLevel = Debug
 	}
-	defaultLogger = sys.New(logLevel)
+	rootLogger = &defaultLogger{
+		level: logLevel,
+	}
 }

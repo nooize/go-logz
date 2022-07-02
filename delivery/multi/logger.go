@@ -6,45 +6,63 @@ import (
 
 // Logger represent structured logger abstraction layer
 type multiLogger struct {
-	active  bool
-	loggers []logz.Logger
+	active bool
+
+	loggers *[]logz.Logger
 }
 
-func (m multiLogger) Enabled() bool {
+func (m *multiLogger) Level(level logz.Level) logz.Logger {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *multiLogger) GetLevel() logz.Level {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *multiLogger) Enabled() bool {
 	return m.active
 }
 
-func (m multiLogger) Discard() logz.Logger {
+func (m *multiLogger) Discard() logz.Logger {
 	m.active = false
 	return m
 }
 
-func (m multiLogger) Trace(format string, v ...interface{}) {
+func (m *multiLogger) Trace(format string, v ...interface{}) {
 	m.send(logz.Trace, format, v...)
 }
 
-func (m multiLogger) Debug(format string, v ...interface{}) {
+func (m *multiLogger) Debug(format string, v ...interface{}) {
 	m.send(logz.Debug, format, v...)
 }
 
-func (m multiLogger) Info(format string, v ...interface{}) {
+func (m *multiLogger) Info(format string, v ...interface{}) {
 	m.send(logz.Info, format, v...)
 }
 
-func (m multiLogger) Warn(format string, v ...interface{}) {
+func (m *multiLogger) Warn(format string, v ...interface{}) {
 	m.send(logz.Warning, format, v...)
 }
 
-func (m multiLogger) Error(format string, v ...interface{}) {
+func (m *multiLogger) Error(format string, v ...interface{}) {
 	m.send(logz.Error, format, v...)
 }
 
-func (m multiLogger) Fatal(format string, v ...interface{}) {
+func (m *multiLogger) Fatal(format string, v ...interface{}) {
 	m.send(logz.Fatal, format, v...)
 }
 
+func (m *multiLogger) Printf(format string, v ...interface{}) {
+	m.send(logz.Debug, format, v...)
+}
+
 func (m multiLogger) send(lev logz.Level, format string, v ...interface{}) {
-	for _, log := range m.loggers {
+	if m.loggers == nil {
+		return
+	}
+	for _, log := range *m.loggers {
 		switch lev {
 		case logz.Debug:
 			go log.Debug(format, v...)

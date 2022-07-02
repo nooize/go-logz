@@ -1,16 +1,6 @@
 package logz
 
-import (
-	"io"
-)
-
 type LoggerOption func(Logger) Logger
-
-func WithWriter(w io.Writer) LoggerOption {
-	return func(l Logger) Logger {
-		return l.Output(w)
-	}
-}
 
 func WithLevel(lev Level) LoggerOption {
 	return func(l Logger) Logger {
@@ -20,14 +10,21 @@ func WithLevel(lev Level) LoggerOption {
 
 func WithKey(key string) LoggerOption {
 	return func(l Logger) Logger {
-		Define(key, l)
+		Append(key, l)
 		return l
 	}
 }
 
-func SetAsDefault() LoggerOption {
+func AppendAs(key string) LoggerOption {
 	return func(l Logger) Logger {
-		defaultLogger = l
-		return defaultLogger
+		Append(key, l)
+		return l
+	}
+}
+
+func AppendAsDefault() LoggerOption {
+	return func(l Logger) Logger {
+		rootLogger = l
+		return rootLogger
 	}
 }

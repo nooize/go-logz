@@ -32,6 +32,4 @@ const (
 	LevelError = "error"
 	// LevelFatalValue is the value used for the fatal level field.
 	LevelFatal = "fatal"
-	// LevelPanicValue is the value used for the panic level field.
-	LevelPanic = "panic"
 )

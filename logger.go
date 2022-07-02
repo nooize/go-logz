@@ -1,7 +1,17 @@
 package logz
 
+import (
+	"log"
+)
+
 // Logger represent structured logger abstraction layer
 type Logger interface {
+
+	// Level creates a child logger with the minimum accepted level set to level.
+	Level(Level) Logger
+
+	// GetLevel returns the current Level of l.
+	GetLevel() Level
 
 	// Enabled return false if the Event is going to be filtered out by
 	// log level or sampling.
@@ -39,4 +49,68 @@ type Logger interface {
 	//
 	// You must call Msg on the returned event in order to send the event.
 	Fatal(format string, v ...interface{})
+
+	// Printf sends a log event using debug level and no extra field.
+	// Arguments are handled in the manner of fmt.Printf.
+	Printf(format string, v ...interface{})
+}
+
+type defaultLogger struct {
+	level Level
+}
+
+func (m *defaultLogger) Level(lvl Level) Logger {
+	return &defaultLogger{level: lvl}
+}
+
+func (m *defaultLogger) GetLevel() Level {
+	return m.level
+}
+
+func (m *defaultLogger) Enabled() bool {
+	return m.level != Disabled
+}
+
+func (m *defaultLogger) Discard() Logger {
+	return &defaultLogger{level: Disabled}
+}
+
+func (m *defaultLogger) Trace(format string, v ...interface{}) {
+	m.send(Trace, format, v...)
+}
+
+func (m *defaultLogger) Debug(format string, v ...interface{}) {
+	m.send(Debug, format, v...)
+}
+
+func (m *defaultLogger) Info(format string, v ...interface{}) {
+	m.send(Info, format, v...)
+}
+
+func (m *defaultLogger) Warn(format string, v ...interface{}) {
+	m.send(Warning, format, v...)
+}
+
+func (m *defaultLogger) Error(format string, v ...interface{}) {
+	m.send(Error, format, v...)
+}
+
+func (m *defaultLogger) Fatal(format string, v ...interface{}) {
+	m.send(Fatal, format, v...)
+}
+
+func (m *defaultLogger) Printf(format string, v ...interface{}) {
+	m.send(Debug, format, v...)
+}
+
+func (m defaultLogger) send(lev Level, format string, v ...interface{}) {
+	if m.level > lev {
+		return
+	}
+	switch lev {
+	case Nop:
+	case Disabled:
+	default:
+		log.Printf(format, v...)
+	}
 }
