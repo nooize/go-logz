@@ -7,69 +7,72 @@ import (
 
 // Logger represent structured logger abstraction layer
 type zeroLogger struct {
-	logger zerolog.Logger
+	logger *zerolog.Logger
 }
 
 func (z *zeroLogger) Level(lvl logz.Level) logz.Logger {
-	return &zeroLogger{logger: z.logger.Level(levelIn(lvl))}
+	l := z.logger.Level(levelIn(lvl))
+	z.logger = &l
+	return z
+}
+
+// With adds the field key with value to log message context.
+func (z *zeroLogger) With(key string, v interface{}) logz.Logger {
+	c := z.logger.With()
+	switch v.(type) {
+	case int, int8, int16, int32, int64:
+		c = c.Int(key, v.(int))
+	}
+	l := c.Logger()
+	z.logger = &l
+	return z
 }
 
 func (z *zeroLogger) GetLevel() logz.Level {
 	return levelOut(z.logger.GetLevel())
 }
 
-func (z *zeroLogger) Enabled() bool {
-	return z.Enabled()
-}
-
-func (z *zeroLogger) Discard() logz.Logger {
-	z.logger = z.logger.Level(zerolog.Disabled)
-	return z
+func (z *zeroLogger) WithLevel(lvl logz.Level) logz.Event {
+	return &zeroEvent{event: z.logger.WithLevel(levelIn(lvl))}
 }
 
 // Trace starts a new message with trace level.
 //
 // You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Trace(format string, v ...interface{}) {
-	z.logger.Trace().Msgf(format, v...)
+func (z *zeroLogger) Trace() logz.Event {
+	return &zeroEvent{event: z.logger.Trace()}
 }
 
 // Debug starts a new message with debug level.
 //
 // You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Debug(format string, v ...interface{}) {
-	z.logger.Debug().Msgf(format, v...)
+func (z *zeroLogger) Debug() logz.Event {
+	return &zeroEvent{event: z.logger.Debug()}
 }
 
 // Info starts a new message with info level.
 //
 // You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Info(format string, v ...interface{}) {
-	z.logger.Info().Msgf(format, v...)
+func (z *zeroLogger) Info() logz.Event {
+	return &zeroEvent{event: z.logger.Info()}
 }
 
 // Warn starts a new message with warn level.
-//
-// You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Warn(format string, v ...interface{}) {
-	z.logger.Warn().Msgf(format, v...)
+func (z *zeroLogger) Warn() logz.Event {
+	return &zeroEvent{event: z.logger.Warn()}
 }
 
 // Error starts a new message with error level.
-//
-// You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Error(format string, v ...interface{}) {
-	z.logger.Error().Msgf(format, v...)
+func (z *zeroLogger) Error() logz.Event {
+	return &zeroEvent{event: z.logger.Error()}
+}
+
+// Err starts a new message with error level.
+func (z *zeroLogger) Err(v error) logz.Event {
+	return &zeroEvent{event: z.logger.Err(v)}
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
-// is called by the Msg method, which terminates the program immediately.
-//
-// You must call Msg on the returned event in order to send the event.
-func (z *zeroLogger) Fatal(format string, v ...interface{}) {
-	z.logger.Fatal().Msgf(format, v...)
-}
-
-func (z *zeroLogger) Printf(format string, v ...interface{}) {
-	z.logger.Printf(format, v...)
+func (z *zeroLogger) Fatal() logz.Event {
+	return &zeroEvent{event: z.logger.Fatal()}
 }

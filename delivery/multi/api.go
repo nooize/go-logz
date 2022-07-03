@@ -5,7 +5,7 @@ import (
 )
 
 func New(logs ...logz.Logger) logz.Logger {
-	out := multiLogger{
+	out := &multiLogger{
 		active:  true,
 		loggers: make([]logz.Logger, len(logs)),
 	}

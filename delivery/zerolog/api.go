@@ -7,7 +7,8 @@ import (
 )
 
 func New(w io.Writer, opts ...logz.LoggerOption) logz.Logger {
-	out := logz.Logger(&zeroLogger{zerolog.New(w).With().Timestamp().Logger()})
+	zl := zerolog.New(w).With().Timestamp().Logger()
+	out := logz.Logger(&zeroLogger{&zl})
 	for _, opt := range opts {
 		out = opt(out)
 	}

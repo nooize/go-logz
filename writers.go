@@ -1,51 +1,9 @@
 package logz
 
 import (
-	"fmt"
-	"github.com/rs/zerolog"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"io"
 	"os"
-	"path/filepath"
-	"strings"
 	"syscall"
-	"time"
 )
-
-func NewTextWriter(out io.Writer) io.Writer {
-	cw := zerolog.ConsoleWriter{Out: out, TimeFormat: time.Stamp}
-	cw.FormatLevel = func(i interface{}) string {
-		return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
-	}
-	cw.FormatMessage = func(i interface{}) string {
-		return fmt.Sprintf("%s", i)
-	}
-	cw.FormatFieldName = func(i interface{}) string {
-		return fmt.Sprintf("%s:", i)
-	}
-	cw.FormatFieldValue = func(i interface{}) string {
-		return strings.ToUpper(fmt.Sprintf("%s", i))
-	}
-	return cw
-}
-
-func NewFileRotateWriter(path string) (io.Writer, error) {
-	dir := filepath.Dir(path)
-	if !isDirWritable(dir) {
-		if err := os.MkdirAll(dir, 0744); err != nil {
-			err = fmt.Errorf("can't create log directory: %s -> %s", dir, err.Error())
-			rootLogger.Error(err.Error())
-			return nil, err
-		}
-	}
-	return &lumberjack.Logger{
-		Filename:   path,
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     60,   //days
-		Compress:   true, // disabled by default
-	}, nil
-}
 
 func isDirWritable(path string) bool {
 	info, err := os.Stat(path)

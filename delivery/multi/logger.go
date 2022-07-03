@@ -6,76 +6,80 @@ import (
 
 // Logger represent structured logger abstraction layer
 type multiLogger struct {
-	active bool
-
-	loggers *[]logz.Logger
+	active  bool
+	loggers []logz.Logger
 }
 
-func (m *multiLogger) Level(level logz.Level) logz.Logger {
+func (l *multiLogger) Level(level logz.Level) logz.Logger {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *multiLogger) GetLevel() logz.Level {
+func (l *multiLogger) GetLevel() logz.Level {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *multiLogger) Enabled() bool {
-	return m.active
+func (l *multiLogger) WithLevel(level logz.Level) logz.Event {
+	switch level {
+	case logz.Trace:
+		return l.Trace()
+	case logz.Debug:
+		return l.Debug()
+	case logz.Info:
+		return l.Info()
+	case logz.Warning:
+		return l.Warn()
+	case logz.Error:
+		return l.Error()
+	case logz.Fatal:
+		return l.event(logz.Fatal)
+	case logz.Disabled:
+		return nil
+	default:
+		return l.event(level)
+	}
 }
 
-func (m *multiLogger) Discard() logz.Logger {
-	m.active = false
-	return m
+func (l *multiLogger) Trace() logz.Event {
+	return l.event(logz.Trace)
 }
 
-func (m *multiLogger) Trace(format string, v ...interface{}) {
-	m.send(logz.Trace, format, v...)
+func (l *multiLogger) Debug() logz.Event {
+	return l.event(logz.Debug)
 }
 
-func (m *multiLogger) Debug(format string, v ...interface{}) {
-	m.send(logz.Debug, format, v...)
+func (l *multiLogger) Info() logz.Event {
+	return l.event(logz.Info)
 }
 
-func (m *multiLogger) Info(format string, v ...interface{}) {
-	m.send(logz.Info, format, v...)
+func (l *multiLogger) Warn() logz.Event {
+	return l.event(logz.Warning)
 }
 
-func (m *multiLogger) Warn(format string, v ...interface{}) {
-	m.send(logz.Warning, format, v...)
+func (l *multiLogger) Error() logz.Event {
+	return l.event(logz.Error)
 }
 
-func (m *multiLogger) Error(format string, v ...interface{}) {
-	m.send(logz.Error, format, v...)
+func (l *multiLogger) Fatal() logz.Event {
+	return l.event(logz.Fatal)
 }
 
-func (m *multiLogger) Fatal(format string, v ...interface{}) {
-	m.send(logz.Fatal, format, v...)
+func (l *multiLogger) event(level logz.Level) logz.Event {
+	list := make([]logz.Event, len(l.loggers))
+	for i, log := range l.loggers {
+		list[i] = log.WithLevel(level)
+	}
+	l.loggers = list
+	return &multiEvent{events: &l.loggers}
 }
 
-func (m *multiLogger) Printf(format string, v ...interface{}) {
-	m.send(logz.Debug, format, v...)
-}
-
-func (m multiLogger) send(lev logz.Level, format string, v ...interface{}) {
-	if m.loggers == nil {
+// Err starts a new message with error level.
+func (l *multiLogger) Err(v error) {
+	if l.loggers == nil {
 		return
 	}
-	for _, log := range *m.loggers {
-		switch lev {
-		case logz.Debug:
-			go log.Debug(format, v...)
-		case logz.Info:
-			go log.Info(format, v...)
-		case logz.Warning:
-			go log.Warn(format, v...)
-		case logz.Error:
-			go log.Error(format, v...)
-		case logz.Fatal:
-			go log.Fatal(format, v...)
-		case logz.Nop:
-		case logz.Disabled:
-		}
+	for _, log := range *l.loggers {
+		go log.Err(v)
 	}
 }

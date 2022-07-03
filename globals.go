@@ -1,6 +1,8 @@
 package logz
 
 const (
+	ErrorStackFieldName = "stack"
+
 	// Debug defines debug log level.
 	Debug Level = iota
 	// Info defines info log level.

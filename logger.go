@@ -1,116 +1,121 @@
 package logz
 
-import (
-	"log"
-)
-
 // Logger represent structured logger abstraction layer
 type Logger interface {
 
 	// Level creates a child logger with the minimum accepted level set to level.
 	Level(Level) Logger
 
-	// GetLevel returns the current Level of l.
+	// With adds the field key with value to log message context.
+	With(key string, v interface{}) Logger
+
+	// GetLevel returns the current Level of Logger.
 	GetLevel() Level
 
-	// Enabled return false if the Event is going to be filtered out by
-	// log level or sampling.
-	Enabled() bool
-
-	// Discard disables the event so Send(f) won't print it.
-	Discard() Logger
+	// WithLevel starts a new Event with level. Unlike Fatal and Panic
+	// methods, WithLevel does not terminate the program or stop the ordinary
+	// flow of a goroutine when used with their respective levels.
+	WithLevel(level Level) Event
 
 	// Trace starts a new message with trace level.
 	//
-	// You must call Msg on the returned event in order to send the event.
-	Trace(format string, v ...interface{})
+	// You must call Send on the returned event in order to newEvent the event.
+	Trace() Event
 	// Debug starts a new message with debug level.
 	//
-	// You must call Msg on the returned event in order to send the event.
-	Debug(format string, v ...interface{})
+	// You must call Send on the returned event in order to newEvent the event.
+	Debug() Event
 
 	// Info starts a new message with info level.
 	//
-	// You must call Msg on the returned event in order to send the event.
-	Info(format string, v ...interface{})
+	// You must call Send on the returned event in order to newEvent the event.
+	Info() Event
 
 	// Warn starts a new message with warn level.
 	//
-	// You must call Msg on the returned event in order to send the event.
-	Warn(format string, v ...interface{})
+	// You must callSend on the returned event in order to newEvent the event.
+	Warn() Event
 
 	// Error starts a new message with error level.
 	//
-	// You must call Msg on the returned event in order to send the event.
-	Error(format string, v ...interface{})
+	// You must call Send on the returned event in order to newEvent the event.
+	Error() Event
 
 	// Fatal starts a new message with fatal level. The os.Exit(1) function
-	// is called by the Msg method, which terminates the program immediately.
-	//
-	// You must call Msg on the returned event in order to send the event.
-	Fatal(format string, v ...interface{})
-
-	// Printf sends a log event using debug level and no extra field.
-	// Arguments are handled in the manner of fmt.Printf.
-	Printf(format string, v ...interface{})
+	// is called by the Send method, which terminates the program immediately.
+	Fatal() Event
 }
 
-type defaultLogger struct {
+type defLogger struct {
 	level Level
 }
 
-func (m *defaultLogger) Level(lvl Level) Logger {
-	return &defaultLogger{level: lvl}
+func (m *defLogger) Level(l Level) Logger {
+	return &defLogger{level: l}
 }
 
-func (m *defaultLogger) GetLevel() Level {
+func (m *defLogger) With(key string, v interface{}) Logger {
+	return m
+}
+
+func (m *defLogger) GetLevel() Level {
 	return m.level
 }
 
-func (m *defaultLogger) Enabled() bool {
-	return m.level != Disabled
+func (m *defLogger) WithLevel(level Level) Event {
+	return m.newEvent(level)
 }
 
-func (m *defaultLogger) Discard() Logger {
-	return &defaultLogger{level: Disabled}
+func (m *defLogger) Trace() Event {
+	return m.newEvent(Trace)
 }
 
-func (m *defaultLogger) Trace(format string, v ...interface{}) {
-	m.send(Trace, format, v...)
+func (m *defLogger) Debug() Event {
+	return m.newEvent(Debug)
 }
 
-func (m *defaultLogger) Debug(format string, v ...interface{}) {
-	m.send(Debug, format, v...)
+func (m *defLogger) Info() Event {
+	return m.newEvent(Info)
 }
 
-func (m *defaultLogger) Info(format string, v ...interface{}) {
-	m.send(Info, format, v...)
+func (m *defLogger) Warn() Event {
+	return m.newEvent(Warning)
 }
 
-func (m *defaultLogger) Warn(format string, v ...interface{}) {
-	m.send(Warning, format, v...)
+func (m *defLogger) Error() Event {
+	return m.newEvent(Error)
 }
 
-func (m *defaultLogger) Error(format string, v ...interface{}) {
-	m.send(Error, format, v...)
+func (m *defLogger) Fatal() Event {
+	return m.newEvent(Fatal)
 }
 
-func (m *defaultLogger) Fatal(format string, v ...interface{}) {
-	m.send(Fatal, format, v...)
+func (m defLogger) newEvent(lev Level) Event {
+	return &defEvent{level: lev}
 }
 
-func (m *defaultLogger) Printf(format string, v ...interface{}) {
-	m.send(Debug, format, v...)
+type defEvent struct {
+	level Level
 }
 
-func (m defaultLogger) send(lev Level, format string, v ...interface{}) {
-	if m.level > lev {
-		return
-	}
-	switch lev {
-	case Nop:
-	case Disabled:
-	default:
-		log.Printf(format, v...)
-	}
+func (e *defEvent) Enabled() bool {
+	return e.level != Disabled
+}
+
+func (e *defEvent) Discard() Event {
+	e.level = Disabled
+	return e
+}
+
+func (e *defEvent) With(key string, v interface{}) Event {
+	return e
+}
+
+func (e *defEvent) Err(err error) Event {
+	return e.With(ErrorStackFieldName, err.Error())
+}
+
+func (e *defEvent) Send(s string, i ...interface{}) {
+	//TODO implement me
+	panic("implement me")
 }

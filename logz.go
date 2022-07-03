@@ -39,7 +39,5 @@ func init() {
 	if os.Getenv("DEBUG_MODE") == "true" {
 		logLevel = Debug
 	}
-	rootLogger = &defaultLogger{
-		level: logLevel,
-	}
+	rootLogger = &defLogger{level: logLevel}
 }
