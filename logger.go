@@ -1,5 +1,7 @@
 package logz
 
+import "log"
+
 // Logger represent structured logger abstraction layer
 type Logger interface {
 
@@ -116,6 +118,6 @@ func (e *defEvent) Err(err error) Event {
 }
 
 func (e *defEvent) Send(s string, i ...interface{}) {
-	//TODO implement me
-	panic("implement me")
+	//TODO improove
+	log.Printf(s, i...)
 }
