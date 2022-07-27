@@ -48,7 +48,6 @@ func (e *zeroEvent) Err(err error) logz.Event {
 	return e
 }
 
-func (e *zeroEvent) Send(s string, i ...interface{}) {
-	//TODO implement me
-	panic("implement me")
+func (e *zeroEvent) Send(f string, i ...interface{}) {
+	e.event.Msgf(f, i...)
 }
